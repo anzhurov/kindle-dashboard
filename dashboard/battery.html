@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <title>Battery badges</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600&display=block" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500&display=block" rel="stylesheet">
   <style>
     /* one badge per percent, stacked; the renderer crops them into kindle/battery/N.png */
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -14,26 +14,26 @@
       display: flex;
       align-items: center;
       justify-content: flex-end;
-      gap: 12px;
-      font: 600 34px 'Inter', sans-serif;
+      gap: 10px;
+      font: 500 28px 'Inter', sans-serif;
       font-feature-settings: 'tnum';
-      color: #4a4a4a;
+      color: #707070; /* same as the footer (--tertiary) */
     }
     svg { display: block; flex: none; }
   </style>
 </head>
 <body>
   <script>
-    const W = 72, H = 36;
+    const W = 50, H = 26, C = '#707070';
     for (let p = 0; p <= 100; p++) {
-      const fill = Math.round(((W - 22) * p) / 100);
+      const fill = Math.round(((W - 16) * p) / 100);
       document.body.insertAdjacentHTML('beforeend', `
         <div class="badge">
           <span>${p}%</span>
           <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
-            <rect x="2" y="2" width="${W - 10}" height="${H - 4}" rx="9" fill="#fff" stroke="#000" stroke-width="4"/>
-            <rect x="${W - 6}" y="${H / 2 - 6}" width="5" height="12" rx="2" fill="#000"/>
-            ${fill > 0 ? `<rect x="8" y="8" width="${fill}" height="${H - 16}" rx="4" fill="#000"/>` : ''}
+            <rect x="1.5" y="1.5" width="${W - 8}" height="${H - 3}" rx="6" fill="#fff" stroke="${C}" stroke-width="2.5"/>
+            <rect x="${W - 5}" y="${H / 2 - 4}" width="4" height="8" rx="1.5" fill="${C}"/>
+            ${fill > 0 ? `<rect x="5" y="5" width="${fill}" height="${H - 10}" rx="3" fill="${C}"/>` : ''}
           </svg>
         </div>`);
     }
