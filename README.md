@@ -68,7 +68,7 @@ dashboard/*.html,css,js ──push──▶ GitHub Actions (кожні 15 хв +
 | `INTERVAL_MIN` | 15 | як часто Kindle оновлює картинку |
 | `FULL_REFRESH_EVERY` | 4 | кожне N-те оновлення робить повне перемальовування (прибирає «привидів») |
 | `STATUS_SCALE` | 4 | розмір напису `OFFLINE` у правому нижньому куті |
-| `BATTERY_X`, `BATTERY_Y` | 920, 62 | де малювати іконку батареї (px) |
+| `BATTERY_X`, `BATTERY_Y` | 816, 58 | де малювати батарею з відсотком (px); вигляд задає `dashboard/battery.html` |
 | `AUTO_RETURN` | 1 | повертати дашборд, коли Kindle засинає |
 
 Лог пишеться в `dashboard/dash.log` (його видно по USB).

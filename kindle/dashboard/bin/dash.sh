@@ -66,11 +66,11 @@ battery() {
   echo "$b"
 }
 
-# battery icon in the top-right corner, rounded to 5%
+# battery badge (percent + icon) in the top-right corner
 draw_battery() {
   bat=$(battery)
   [ -z "$bat" ] && return
-  icon="$EXT_DIR/battery/$(((bat + 2) / 5 * 5)).png"
+  icon="$EXT_DIR/battery/$bat.png"
   [ -f "$icon" ] || return
   if [ -n "$FBINK" ]; then
     "$FBINK" -q -g "file=$icon,x=$BATTERY_X,y=$BATTERY_Y" && return
@@ -122,8 +122,8 @@ trap back_to_reader TERM INT
 echo $$ > "$DASH_PID"
 FBINK=$(find_fbink)
 STATUS_SCALE=${STATUS_SCALE:-4}
-BATTERY_X=${BATTERY_X:-920}
-BATTERY_Y=${BATTERY_Y:-62}
+BATTERY_X=${BATTERY_X:-816}
+BATTERY_Y=${BATTERY_Y:-58}
 log "dashboard start $(cat "$EXT_DIR/version" 2>/dev/null) (fbink: ${FBINK:-none}, battery: $(battery)%)"
 lipc-set-prop com.lab126.powerd preventScreenSaver 1
 sleep 2

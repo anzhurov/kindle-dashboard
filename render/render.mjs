@@ -42,26 +42,25 @@ if (dashError && !process.env.DASH_ALLOW_ERRORS) {
 await page.evaluate(() => document.fonts.ready);
 
 const raw = await page.screenshot({ type: 'png' });
+
+// battery badges (0..100%) in the dashboard font, drawn by the Kindle at BATTERY.x/y
+const BATTERY = { x: 816, y: 58, width: 200, height: 48 };
+await page.setViewportSize({ width: BATTERY.width, height: BATTERY.height * 101 });
+await page.goto(pathToFileURL(path.join(root, 'dashboard', 'battery.html')).href, { waitUntil: 'networkidle' });
+await page.waitForFunction(() => window.dashReady === true, null, { timeout: 20000 });
+const badgeSheet = await page.screenshot({ type: 'png' });
 await browser.close();
 
-const gray = sharp(raw).grayscale().toColourspace('b-w');
+const toGray = (img) => img.flatten({ background: '#fff' }).grayscale().toColourspace('b-w');
+const gray = toGray(sharp(raw));
 await gray.clone().rotate(ROTATE).png({ compressionLevel: 9 }).toFile(path.join(outDir, 'dash.png'));
 
-// Kindle package: scripts + battery icons, pulled by dash.sh when `version` changes
-const BATTERY = { x: 920, y: 62, width: 96, height: 48 };
-const batterySvg = (pct) => {
-  const { width: w, height: h } = BATTERY;
-  const fill = Math.round(((w - 31) * pct) / 100);
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">
-    <rect width="${w}" height="${h}" fill="#fff"/>
-    <rect x="3" y="3" width="${w - 14}" height="${h - 6}" rx="11" fill="#fff" stroke="#000" stroke-width="5"/>
-    <rect x="${w - 8}" y="${h / 2 - 8}" width="7" height="16" rx="3" fill="#000"/>
-    ${fill > 0 ? `<rect x="11" y="11" width="${fill}" height="${h - 22}" rx="5" fill="#000"/>` : ''}
-  </svg>`;
-};
-const batteryPng = (pct) =>
-  sharp(Buffer.from(batterySvg(pct))).flatten({ background: '#fff' }).grayscale().toColourspace('b-w').png().toBuffer();
+const badge = (pct) =>
+  toGray(sharp(badgeSheet).extract({ left: 0, top: pct * BATTERY.height, width: BATTERY.width, height: BATTERY.height }))
+    .png({ compressionLevel: 9 })
+    .toBuffer();
 
+// Kindle package: scripts + battery badges, pulled by dash.sh when `version` changes
 const kindleOut = path.join(outDir, 'kindle');
 await rm(kindleOut, { recursive: true, force: true });
 await cp(path.join(root, 'kindle', 'dashboard'), kindleOut, {
@@ -69,8 +68,8 @@ await cp(path.join(root, 'kindle', 'dashboard'), kindleOut, {
   filter: (src) => !/\.(log|old)$/.test(src),
 });
 await mkdir(path.join(kindleOut, 'battery'), { recursive: true });
-for (let pct = 0; pct <= 100; pct += 5) {
-  await writeFile(path.join(kindleOut, 'battery', `${pct}.png`), await batteryPng(pct));
+for (let pct = 0; pct <= 100; pct++) {
+  await writeFile(path.join(kindleOut, 'battery', `${pct}.png`), await badge(pct));
 }
 const files = (await readdir(kindleOut, { recursive: true, withFileTypes: true }))
   .filter((e) => e.isFile())
@@ -84,7 +83,7 @@ await writeFile(path.join(kindleOut, 'version'), `${hash.digest('hex').slice(0, 
 // preview shows a sample battery where the Kindle draws the real one
 await gray
   .clone()
-  .composite([{ input: await batteryPng(80), left: BATTERY.x, top: BATTERY.y }])
+  .composite([{ input: await badge(80), left: BATTERY.x, top: BATTERY.y }])
   .removeAlpha()
   .png({ compressionLevel: 9 })
   .toFile(path.join(outDir, 'preview.png'));

@@ -21,7 +21,8 @@ function renderDate() {
   const now = new Date();
   $('weekday').textContent = now.toLocaleDateString('uk-UA', { weekday: 'long' });
   $('date').textContent = now.toLocaleDateString('uk-UA', { day: 'numeric', month: 'long' });
-  $('updated').textContent = `${hhmm(now)}, ${now.toLocaleDateString('uk-UA', { day: 'numeric', month: 'long' })}`;
+  $('updated-icon').innerHTML = icon('refresh', 2.2);
+  $('updated').textContent = `${hhmm(now)}, ${now.getDate()}.${String(now.getMonth() + 1).padStart(2, '0')}`;
 }
 
 function fact(name, label, value) {

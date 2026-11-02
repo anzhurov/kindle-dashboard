@@ -71,12 +71,14 @@ svg { display: block; }
 .fact b { font-weight: 600; color: var(--label); }
 .fact span { color: var(--secondary); white-space: nowrap; }
 
+footer svg { width: 28px; height: 28px; }
+
 footer {
   height: 64px;
   flex: none;
   display: flex;
   align-items: center;
-  gap: 0.3em;
+  gap: 10px;
   padding: 0 8px;
   font-size: 28px;
   font-weight: 500;

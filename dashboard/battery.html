@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <title>Battery badges</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600&display=block" rel="stylesheet">
+  <style>
+    /* one badge per percent, stacked; the renderer crops them into kindle/battery/N.png */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #fff; width: 200px; }
+    .badge {
+      width: 200px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      font: 600 34px 'Inter', sans-serif;
+      font-feature-settings: 'tnum';
+      color: #4a4a4a;
+    }
+    svg { display: block; flex: none; }
+  </style>
+</head>
+<body>
+  <script>
+    const W = 72, H = 36;
+    for (let p = 0; p <= 100; p++) {
+      const fill = Math.round(((W - 22) * p) / 100);
+      document.body.insertAdjacentHTML('beforeend', `
+        <div class="badge">
+          <span>${p}%</span>
+          <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+            <rect x="2" y="2" width="${W - 10}" height="${H - 4}" rx="9" fill="#fff" stroke="#000" stroke-width="4"/>
+            <rect x="${W - 6}" y="${H / 2 - 6}" width="5" height="12" rx="2" fill="#000"/>
+            ${fill > 0 ? `<rect x="8" y="8" width="${fill}" height="${H - 16}" rx="4" fill="#000"/>` : ''}
+          </svg>
+        </div>`);
+    }
+    document.fonts.ready.then(() => { window.dashReady = true; });
+  </script>
+</body>
+</html>
