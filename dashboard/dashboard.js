@@ -20,16 +20,20 @@ const hhmm = (d) => d.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-
 function renderDate() {
   const now = new Date();
   $('weekday').textContent = now.toLocaleDateString('uk-UA', { weekday: 'long' });
-  $('date').textContent = now.toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' });
-  $('updated').textContent = `${now.toLocaleDateString('uk-UA', { day: 'numeric', month: 'long' })}, ${hhmm(now)}`;
+  $('date').textContent = now.toLocaleDateString('uk-UA', { day: 'numeric', month: 'long' });
+  $('updated').textContent = `${hhmm(now)}, ${now.toLocaleDateString('uk-UA', { day: 'numeric', month: 'long' })}`;
+}
+
+function fact(name, label, value) {
+  return `<div class="fact">${icon(name, 2.2)}<span>${label} <b>${value}</b></span></div>`;
 }
 
 async function renderWeather() {
   const params = new URLSearchParams({
     latitude: cfg.latitude,
     longitude: cfg.longitude,
-    current: 'temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m',
-    hourly: 'temperature_2m,weather_code,precipitation_probability',
+    current: 'temperature_2m,apparent_temperature,weather_code,is_day,wind_speed_10m,relative_humidity_2m',
+    hourly: 'temperature_2m,weather_code,is_day',
     daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset',
     timezone: 'auto',
     forecast_days: 5,
@@ -40,35 +44,56 @@ async function renderWeather() {
   const w = await res.json();
   const c = w.current;
   const d = w.daily;
+  const h = w.hourly;
 
+  $('now-icon').innerHTML = icon(weatherIcon(c.weather_code, c.is_day), 1.8);
   $('temp').textContent = deg(c.temperature_2m);
   $('cond').textContent = WMO[c.weather_code] ?? '—';
   $('feels').textContent = `Відчувається як ${deg(c.apparent_temperature)}`;
-  $('minmax').textContent = `Вдень ${deg(d.temperature_2m_max[0])} · вночі ${deg(d.temperature_2m_min[0])}`;
-  $('extra').textContent = `Вітер ${Math.round(c.wind_speed_10m)} м/с · вологість ${c.relative_humidity_2m}%`;
-  $('sun').textContent = `☀ ${d.sunrise[0].slice(11)} – ${d.sunset[0].slice(11)}`;
 
-  const start = w.hourly.time.findIndex((t) => t >= c.time.slice(0, 13) + ':00');
-  $('hours').innerHTML = [3, 6, 9, 12, 15]
+  $('facts').innerHTML = [
+    fact('sunrise', 'Схід', d.sunrise[0].slice(11)),
+    fact('sunset', 'Захід', d.sunset[0].slice(11)),
+    fact('wind', 'Вітер', `${Math.round(c.wind_speed_10m)} м/с`),
+    fact('drop', 'Вологість', `${c.relative_humidity_2m}%`),
+  ].join('');
+
+  const start = h.time.findIndex((t) => t >= c.time.slice(0, 13) + ':00');
+  $('hours').innerHTML = [0, 2, 4, 6, 8, 10]
     .map((step) => start + step)
-    .filter((i) => i < w.hourly.time.length)
-    .map((i) => `
+    .filter((i) => i >= 0 && i < h.time.length)
+    .map((i, k) => `
       <div class="hour">
-        <div>${w.hourly.time[i].slice(11, 16)}</div>
-        <div class="t">${deg(w.hourly.temperature_2m[i])}</div>
-        <div class="p">☂ ${w.hourly.precipitation_probability[i] ?? 0}%</div>
+        <div class="h ${k === 0 ? 'now-label' : ''}">${k === 0 ? 'Зараз' : h.time[i].slice(11, 13)}</div>
+        ${icon(weatherIcon(h.weather_code[i], h.is_day[i]), 2)}
+        <div class="t">${deg(k === 0 ? c.temperature_2m : h.temperature_2m[i])}</div>
       </div>`)
     .join('');
 
-  $('days').innerHTML = d.time.slice(1)
-    .map((day, k) => {
-      const i = k + 1;
-      const name = new Date(`${day}T12:00:00`).toLocaleDateString('uk-UA', { weekday: 'short', day: 'numeric' });
+  const lo = Math.min(...d.temperature_2m_min);
+  const hi = Math.max(...d.temperature_2m_max);
+  const pos = (t) => `${((t - lo) / Math.max(hi - lo, 1)) * 100}%`;
+
+  $('days').innerHTML = d.time
+    .map((day, i) => {
+      const name = i === 0
+        ? 'Сьогодні'
+        : new Date(`${day}T12:00:00`).toLocaleDateString('uk-UA', { weekday: 'short' });
+      const pop = d.precipitation_probability_max[i];
+      const dot = i === 0 ? `<div class="dot" style="left:${pos(c.temperature_2m)}"></div>` : '';
       return `
         <div class="day">
-          <span class="name">${name}</span>
-          <span class="range">${deg(d.temperature_2m_max[i])} / ${deg(d.temperature_2m_min[i])}</span>
-          <span class="desc">${WMO[d.weather_code[i]] ?? '—'}${d.precipitation_probability_max[i] ? ` · ☂ ${d.precipitation_probability_max[i]}%` : ''}</span>
+          <span class="name">${name[0].toUpperCase() + name.slice(1)}</span>
+          ${icon(weatherIcon(d.weather_code[i]), 2)}
+          <span class="pop">${pop >= 20 ? `${pop}%` : ''}</span>
+          <div class="range">
+            <span class="lo">${deg(d.temperature_2m_min[i])}</span>
+            <div class="bar">
+              <div class="fill" style="left:${pos(d.temperature_2m_min[i])};right:calc(100% - ${pos(d.temperature_2m_max[i])})"></div>
+              ${dot}
+            </div>
+            <span class="hi">${deg(d.temperature_2m_max[i])}</span>
+          </div>
         </div>`;
     })
     .join('');
