@@ -47,6 +47,8 @@ show() {
   if [ $((cycle % FULL_REFRESH_EVERY)) -eq 0 ]; then
     eips -c
     eips -f -g "$IMG"
+    # let the full flash finish before drawing the battery over it
+    sleep 2
   else
     eips -g "$IMG"
   fi
@@ -144,5 +146,7 @@ while true; do
   overlay "$note"
   cycle=$((cycle + 1))
 
+  # e-ink updates are asynchronous: suspending mid-update leaves a half-drawn, smeared screen
+  sleep 3
   rtc_sleep "$INTERVAL" || back_to_reader
 done
