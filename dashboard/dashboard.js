@@ -28,6 +28,20 @@ function fact(name, label, value) {
   return `<div class="fact">${icon(name, 2.2)}<span>${label} <b>${value}</b></span></div>`;
 }
 
+async function fetchJson(url, attempts = 4) {
+  for (let i = 1; ; i++) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`${res.status} ${url}`);
+      return await res.json();
+    } catch (e) {
+      if (i >= attempts) throw e;
+      console.warn(`retry ${i}: ${e.message}`);
+      await new Promise((r) => setTimeout(r, 3000 * i));
+    }
+  }
+}
+
 async function renderWeather() {
   const params = new URLSearchParams({
     latitude: cfg.latitude,
@@ -39,9 +53,7 @@ async function renderWeather() {
     forecast_days: 5,
     wind_speed_unit: 'ms',
   });
-  const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
-  if (!res.ok) throw new Error(`open-meteo ${res.status}`);
-  const w = await res.json();
+  const w = await fetchJson(`https://api.open-meteo.com/v1/forecast?${params}`);
   const c = w.current;
   const d = w.daily;
   const h = w.hourly;
@@ -105,6 +117,7 @@ async function renderWeather() {
     await renderWeather();
   } catch (e) {
     console.error(e);
+    window.dashError = String(e);
     $('cond').textContent = 'Погода недоступна';
   } finally {
     window.dashReady = true;

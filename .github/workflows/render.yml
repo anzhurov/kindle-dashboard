@@ -31,7 +31,7 @@ jobs:
       - run: npm run render
         env:
           DASH_TZ: ${{ vars.DASH_TZ || 'Europe/Kyiv' }}
-          DASH_ROTATE: ${{ vars.DASH_ROTATE || '90' }}
+          DASH_ROTATE: ${{ vars.DASH_ROTATE || '0' }}
           PW_CHANNEL: chrome
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

@@ -4,11 +4,11 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
 
-const WIDTH = 1448;
-const HEIGHT = 1072;
+const WIDTH = 1072;
+const HEIGHT = 1448;
 const TZ = process.env.DASH_TZ || 'Europe/Kyiv';
 const CHANNEL = process.env.PW_CHANNEL || 'chrome';
-const ROTATE = Number(process.env.DASH_ROTATE || 90);
+const ROTATE = Number(process.env.DASH_ROTATE || 0);
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const outDir = path.join(root, 'out');
@@ -28,8 +28,16 @@ page.on('pageerror', (e) => console.error(`[page error] ${e.message}`));
 
 await page.goto(pageUrl, { waitUntil: 'networkidle' });
 await page
-  .waitForFunction(() => window.dashReady === true, null, { timeout: 20000 })
-  .catch(() => console.warn('dashReady not set after 20s, rendering anyway'));
+  .waitForFunction(() => window.dashReady === true, null, { timeout: 40000 })
+  .catch(() => console.warn('dashReady not set after 40s, rendering anyway'));
+
+// a failed run keeps the previous image on Pages instead of publishing an empty board
+const dashError = await page.evaluate(() => window.dashError);
+if (dashError && !process.env.DASH_ALLOW_ERRORS) {
+  await browser.close();
+  console.error(`Dashboard data failed: ${dashError}`);
+  process.exit(1);
+}
 await page.evaluate(() => document.fonts.ready);
 
 const raw = await page.screenshot({ type: 'png' });

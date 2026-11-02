@@ -1,10 +1,10 @@
 # Kindle dashboard
 
-Дашборд для Kindle Paperwhite 3, що стоїть горизонтально (1448×1072, 300 ppi).
+Дашборд для Kindle Paperwhite 3, що стоїть вертикально (1072×1448, 300 ppi).
 
 ```
 dashboard/*.html,css,js ──push──▶ GitHub Actions (кожні 15 хв + на push)
-                                   Chrome → 1448×1072 → поворот 90° → PNG 1072×1448 grayscale
+                                   Chrome → PNG 1072×1448 grayscale
                                           │
                                    GitHub Pages: https://USER.github.io/REPO/dash.png
                                           │
@@ -38,7 +38,7 @@ dashboard/*.html,css,js ──push──▶ GitHub Actions (кожні 15 хв +
 
 Часовий пояс задається в **Settings → Secrets and variables → Actions → Variables** змінною `DASH_TZ`
 (за замовчуванням `Europe/Kyiv`).
-Якщо на Kindle картинка догори дриґом, задайте там же `DASH_ROTATE=270` (за замовчуванням `90`).
+Щоб поставити Kindle горизонтально, задайте там же `DASH_ROTATE=90` (або `270`) і змініть розмір полотна в `render/render.mjs` і `style.css` на 1448×1072.
 
 ## 2. Kindle (один раз)
 
@@ -67,7 +67,8 @@ dashboard/*.html,css,js ──push──▶ GitHub Actions (кожні 15 хв +
 |---|---|---|
 | `INTERVAL_MIN` | 15 | як часто Kindle оновлює картинку |
 | `FULL_REFRESH_EVERY` | 4 | кожне N-те оновлення робить повне перемальовування (прибирає «привидів») |
-| `LOW_BATTERY` | 15 | нижче цього % у кутку з'являється `LOW BATTERY` |
+| `LOW_BATTERY` | 15 | нижче цього % біля заряду з'являється `LOW` |
+| `STATUS_SCALE` | 4 | розмір тексту заряду в правому нижньому куті |
 | `AUTO_RETURN` | 1 | повертати дашборд, коли Kindle засинає |
 
 Лог пишеться в `dashboard/dash.log` (його видно по USB).
@@ -78,16 +79,16 @@ dashboard/*.html,css,js ──push──▶ GitHub Actions (кожні 15 хв +
 Через ~1–2 хв новий PNG з'явиться на Pages, а Kindle підхопить його на найближчому оновленні.
 
 Правила для E Ink:
-- полотно рівно **1448×1072 px** (альбомне), без скролу. Поворот для Kindle робить рендерер;
+- полотно рівно **1072×1448 px** (вертикальне), без скролу. Праву частину футера не займайте: там Kindle малює заряд;
 - шрифт від ~30px, бо 16px на 300 ppi — це ~1.3 мм;
 - лише чорне, біле й кілька сірих; тонкі сірі лінії зникають;
-- дані з API підтягуйте в `dashboard.js`. Рендерер чекає на `window.dashReady = true` (до 20 с).
+- дані з API підтягуйте в `dashboard.js`. Рендерер чекає на `window.dashReady = true` (до 40 с). Якщо задати `window.dashError`, рендер падає й на Pages лишається попередня картинка.
 
 Локальне прев'ю:
 ```sh
 npm install
 npm run render      # → out/dash.png
-open out/preview.png   # як виглядатиме; out/dash.png — повернута версія для Kindle
+open out/preview.png   # як виглядатиме; out/dash.png — те, що завантажує Kindle
 ```
 Потрібен встановлений Google Chrome (у GitHub Actions він уже є).
 

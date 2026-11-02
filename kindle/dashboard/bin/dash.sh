@@ -32,12 +32,35 @@ show() {
   fi
 }
 
+find_fbink() {
+  for f in "$(command -v fbink 2>/dev/null)" /mnt/us/libkh/bin/fbink /usr/bin/fbink \
+           /mnt/us/usbnet/bin/fbink /mnt/us/extensions/MRInstaller/bin/K5/fbink; do
+    [ -n "$f" ] && [ -x "$f" ] && { echo "$f"; return; }
+  done
+  find /mnt/us/libkh -name fbink -type f 2>/dev/null | head -n 1
+}
+
+battery() {
+  b=$(lipc-get-prop com.lab126.powerd battLevel 2>/dev/null | tr -dc 0-9)
+  [ -z "$b" ] && b=$(gasgauge-info -c 2>/dev/null | tr -dc 0-9)
+  echo "$b"
+}
+
+# bottom-right corner, next to "Оновлено" in the footer
 overlay() {
-  bat=$(gasgauge-info -c 2>/dev/null | tr -dc 0-9)
+  bat=$(battery)
   msg=""
-  [ -n "$bat" ] && [ "$bat" -le "$LOW_BATTERY" ] && msg="LOW BATTERY $bat%"
-  [ -n "$1" ] && msg="$msg $1"
-  [ -n "$msg" ] && eips 1 1 " $msg "
+  [ -n "$1" ] && msg="$1  "
+  if [ -n "$bat" ]; then
+    msg="${msg}Battery $bat%"
+    [ "$bat" -le "$LOW_BATTERY" ] && msg="${msg} LOW"
+  fi
+  [ -z "$msg" ] && return
+  if [ -n "$FBINK" ]; then
+    "$FBINK" -q -S "$STATUS_SCALE" -x "-$((${#msg} + 2))" -y -2 "$msg" || eips 1 1 " $msg "
+  else
+    eips 1 1 " $msg "
+  fi
 }
 
 # returns 0 if the device woke up by RTC alarm, 1 if woken early (power button)
@@ -73,7 +96,9 @@ back_to_reader() {
 trap back_to_reader TERM INT
 
 echo $$ > "$DASH_PID"
-log "dashboard start"
+FBINK=$(find_fbink)
+STATUS_SCALE=${STATUS_SCALE:-4}
+log "dashboard start (fbink: ${FBINK:-none}, battery: $(battery)%)"
 lipc-set-prop com.lab126.powerd preventScreenSaver 1
 sleep 2
 framework_stop
