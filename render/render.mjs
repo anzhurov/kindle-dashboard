@@ -1,6 +1,7 @@
 import { chromium } from 'playwright';
 import sharp from 'sharp';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
 
@@ -44,8 +45,49 @@ const raw = await page.screenshot({ type: 'png' });
 await browser.close();
 
 const gray = sharp(raw).grayscale().toColourspace('b-w');
-await gray.clone().png({ compressionLevel: 9 }).toFile(path.join(outDir, 'preview.png'));
 await gray.clone().rotate(ROTATE).png({ compressionLevel: 9 }).toFile(path.join(outDir, 'dash.png'));
+
+// Kindle package: scripts + battery icons, pulled by dash.sh when `version` changes
+const BATTERY = { x: 920, y: 62, width: 96, height: 48 };
+const batterySvg = (pct) => {
+  const { width: w, height: h } = BATTERY;
+  const fill = Math.round(((w - 31) * pct) / 100);
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">
+    <rect width="${w}" height="${h}" fill="#fff"/>
+    <rect x="3" y="3" width="${w - 14}" height="${h - 6}" rx="11" fill="#fff" stroke="#000" stroke-width="5"/>
+    <rect x="${w - 8}" y="${h / 2 - 8}" width="7" height="16" rx="3" fill="#000"/>
+    ${fill > 0 ? `<rect x="11" y="11" width="${fill}" height="${h - 22}" rx="5" fill="#000"/>` : ''}
+  </svg>`;
+};
+const batteryPng = (pct) =>
+  sharp(Buffer.from(batterySvg(pct))).flatten({ background: '#fff' }).grayscale().toColourspace('b-w').png().toBuffer();
+
+const kindleOut = path.join(outDir, 'kindle');
+await rm(kindleOut, { recursive: true, force: true });
+await cp(path.join(root, 'kindle', 'dashboard'), kindleOut, {
+  recursive: true,
+  filter: (src) => !/\.(log|old)$/.test(src),
+});
+await mkdir(path.join(kindleOut, 'battery'), { recursive: true });
+for (let pct = 0; pct <= 100; pct += 5) {
+  await writeFile(path.join(kindleOut, 'battery', `${pct}.png`), await batteryPng(pct));
+}
+const files = (await readdir(kindleOut, { recursive: true, withFileTypes: true }))
+  .filter((e) => e.isFile())
+  .map((e) => path.relative(kindleOut, path.join(e.parentPath, e.name)))
+  .sort();
+const hash = createHash('sha256');
+for (const f of files) hash.update(f).update(await readFile(path.join(kindleOut, f)));
+await writeFile(path.join(kindleOut, 'files'), `${files.join('\n')}\n`);
+await writeFile(path.join(kindleOut, 'version'), `${hash.digest('hex').slice(0, 12)}\n`);
+
+// preview shows a sample battery where the Kindle draws the real one
+await gray
+  .clone()
+  .composite([{ input: await batteryPng(80), left: BATTERY.x, top: BATTERY.y }])
+  .removeAlpha()
+  .png({ compressionLevel: 9 })
+  .toFile(path.join(outDir, 'preview.png'));
 
 await writeFile(
   path.join(outDir, 'index.html'),

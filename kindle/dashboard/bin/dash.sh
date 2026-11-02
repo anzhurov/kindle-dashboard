@@ -14,13 +14,33 @@ wifi_up() {
   done
 }
 
+get() {
+  url="$1?t=$(date +%s)"
+  curl -fsSL --max-time 30 -o "$2" "$url" || curl -kfsSL --max-time 30 -o "$2" "$url"
+}
+
 fetch() {
-  url="$DASH_URL?t=$(date +%s)"
-  tmp=/tmp/dash.new.png
-  curl -fsSL --max-time 30 -o "$tmp" "$url" \
-    || curl -kfsSL --max-time 30 -o "$tmp" "$url" \
-    || return 1
-  mv "$tmp" "$IMG"
+  get "$DASH_URL" /tmp/dash.new.png || return 1
+  mv /tmp/dash.new.png "$IMG"
+}
+
+# pulls bin/, dash.conf and battery icons published next to dash.png, restarts if anything changed
+self_update() {
+  base="${DASH_URL%/*}/kindle"
+  get "$base/version" /tmp/dash-version || return 0
+  [ "$(cat /tmp/dash-version)" = "$(cat "$EXT_DIR/version" 2>/dev/null)" ] && return 0
+  get "$base/files" /tmp/dash-files || return 0
+  rm -rf /tmp/dash-upd
+  while read -r f; do
+    [ -z "$f" ] && continue
+    mkdir -p "/tmp/dash-upd/$(dirname "$f")"
+    get "$base/$f" "/tmp/dash-upd/$f" || { log "update: failed to get $f"; return 0; }
+    case "$f" in *.sh) sh -n "/tmp/dash-upd/$f" || { log "update: bad $f"; return 0; } ;; esac
+  done < /tmp/dash-files
+  cp -r /tmp/dash-upd/. "$EXT_DIR/"
+  cp /tmp/dash-version "$EXT_DIR/version"
+  log "update: installed $(cat "$EXT_DIR/version"), restarting"
+  exec /bin/sh "$EXT_DIR/bin/dash.sh"
 }
 
 show() {
@@ -46,21 +66,25 @@ battery() {
   echo "$b"
 }
 
+# battery icon in the top-right corner, rounded to 5%
+draw_battery() {
+  bat=$(battery)
+  [ -z "$bat" ] && return
+  icon="$EXT_DIR/battery/$(((bat + 2) / 5 * 5)).png"
+  [ -f "$icon" ] || return
+  if [ -n "$FBINK" ]; then
+    "$FBINK" -q -g "file=$icon,x=$BATTERY_X,y=$BATTERY_Y" && return
+  fi
+  eips -g "$icon" -x "$BATTERY_X" -y "$BATTERY_Y"
+}
+
 # bottom-right corner, next to "Оновлено" in the footer
 overlay() {
-  bat=$(battery)
-  msg=""
-  [ -n "$1" ] && msg="$1  "
-  if [ -n "$bat" ]; then
-    msg="${msg}Battery $bat%"
-    [ "$bat" -le "$LOW_BATTERY" ] && msg="${msg} LOW"
-  fi
-  [ -z "$msg" ] && return
+  [ -z "$1" ] && return
   if [ -n "$FBINK" ]; then
-    "$FBINK" -q -S "$STATUS_SCALE" -x "-$((${#msg} + 2))" -y -2 "$msg" || eips 1 1 " $msg "
-  else
-    eips 1 1 " $msg "
+    "$FBINK" -q -S "$STATUS_SCALE" -x "-$((${#1} + 2))" -y -2 "$1" && return
   fi
+  eips 1 1 " $1 "
 }
 
 # returns 0 if the device woke up by RTC alarm, 1 if woken early (power button)
@@ -98,7 +122,9 @@ trap back_to_reader TERM INT
 echo $$ > "$DASH_PID"
 FBINK=$(find_fbink)
 STATUS_SCALE=${STATUS_SCALE:-4}
-log "dashboard start (fbink: ${FBINK:-none}, battery: $(battery)%)"
+BATTERY_X=${BATTERY_X:-920}
+BATTERY_Y=${BATTERY_Y:-62}
+log "dashboard start $(cat "$EXT_DIR/version" 2>/dev/null) (fbink: ${FBINK:-none}, battery: $(battery)%)"
 lipc-set-prop com.lab126.powerd preventScreenSaver 1
 sleep 2
 framework_stop
@@ -108,11 +134,13 @@ while true; do
   note=""
   if wifi_up && fetch; then
     log "updated"
+    self_update
   else
     note="OFFLINE"
     log "fetch failed"
   fi
   [ -f "$IMG" ] && show
+  draw_battery
   overlay "$note"
   cycle=$((cycle + 1))
 
