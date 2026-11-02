@@ -1,0 +1,92 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 1072px;
+  height: 1448px;
+  overflow: hidden;
+  background: #fff;
+  color: #000;
+  font-family: 'Inter', 'DejaVu Sans', sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  padding: 56px 64px 36px;
+  gap: 32px;
+}
+
+.muted { color: #444; }
+
+header .weekday {
+  font-size: 104px;
+  font-weight: 800;
+  line-height: 1;
+  text-transform: capitalize;
+  letter-spacing: -2px;
+}
+header .date {
+  font-size: 52px;
+  font-weight: 400;
+  margin-top: 12px;
+}
+
+.now {
+  display: flex;
+  align-items: center;
+  gap: 48px;
+  border-top: 6px solid #000;
+  padding-top: 32px;
+}
+.now .temp {
+  font-size: 220px;
+  font-weight: 800;
+  line-height: 0.9;
+  letter-spacing: -8px;
+}
+.now-info { font-size: 40px; line-height: 1.35; }
+.now-info .cond { font-size: 52px; font-weight: 600; }
+
+.hours {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  border: 4px solid #000;
+  border-radius: 16px;
+}
+.hour {
+  text-align: center;
+  padding: 14px 0;
+  font-size: 36px;
+}
+.hour + .hour { border-left: 2px solid #000; }
+.hour .t { font-size: 48px; font-weight: 800; margin: 6px 0; }
+.hour .p { font-size: 30px; color: #444; }
+
+.days { display: flex; flex-direction: column; }
+.day {
+  display: grid;
+  grid-template-columns: 220px 1fr 220px;
+  align-items: baseline;
+  font-size: 42px;
+  padding: 12px 0;
+  border-bottom: 2px solid #000;
+}
+.day .name { font-weight: 600; text-transform: capitalize; }
+.day .range { text-align: right; font-weight: 800; }
+
+.notes h2 {
+  font-size: 44px;
+  font-weight: 800;
+  margin-bottom: 16px;
+}
+.notes ul { list-style: none; font-size: 38px; line-height: 1.5; }
+.notes li::before { content: '— '; }
+
+footer {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-between;
+  font-size: 30px;
+  color: #444;
+}

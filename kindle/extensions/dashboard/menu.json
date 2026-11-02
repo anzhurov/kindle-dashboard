@@ -1,0 +1,12 @@
+{
+  "items": [
+    {
+      "name": "Dashboard",
+      "priority": 0,
+      "items": [
+        { "name": "Start dashboard", "priority": 1, "action": "/bin/sh /mnt/us/extensions/dashboard/bin/start.sh", "exitmenu": true },
+        { "name": "Disable auto-return", "priority": 2, "action": "/bin/sh /mnt/us/extensions/dashboard/bin/stop.sh", "exitmenu": true }
+      ]
+    }
+  ]
+}
