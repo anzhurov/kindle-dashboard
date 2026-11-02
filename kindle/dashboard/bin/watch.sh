@@ -1,5 +1,5 @@
 #!/bin/sh
-. /mnt/us/extensions/dashboard/bin/common.sh
+. /mnt/us/dashboard/bin/common.sh
 
 echo $$ > "$WATCH_PID"
 log "watcher: waiting for sleep"

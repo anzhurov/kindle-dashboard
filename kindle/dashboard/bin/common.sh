@@ -1,4 +1,4 @@
-EXT_DIR=/mnt/us/extensions/dashboard
+EXT_DIR=/mnt/us/dashboard
 . "$EXT_DIR/dash.conf"
 
 LOG="$EXT_DIR/dash.log"

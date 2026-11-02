@@ -8,7 +8,7 @@ dashboard/*.html,css,js ──push──▶ GitHub Actions (кожні 15 хв +
                                           │
                                    GitHub Pages: https://USER.github.io/REPO/dash.png
                                           │
-                       Kindle (KUAL-розширення): wifi → curl → eips → сон до наступного оновлення
+                       Kindle (scriptlet): wifi → curl → eips → сон до наступного оновлення
 ```
 
 ## Структура
@@ -19,7 +19,8 @@ dashboard/*.html,css,js ──push──▶ GitHub Actions (кожні 15 хв +
 | `dashboard/config.js` | Місто й координати для погоди |
 | `render/render.mjs` | Робить скріншот сторінки, повертає його й конвертує в grayscale PNG |
 | `.github/workflows/render.yml` | Рендер + публікація на GitHub Pages |
-| `kindle/extensions/dashboard/` | Розширення KUAL для Kindle |
+| `kindle/dashboard/` | Скрипти для Kindle (копіюються в корінь як `dashboard/`) |
+| `kindle/documents/` | Scriptlet-и, що запускають дашборд з бібліотеки Kindle |
 | `docs/JAILBREAK.md` | Підготовка Kindle |
 
 ## 1. GitHub (один раз)
@@ -41,20 +42,22 @@ dashboard/*.html,css,js ──push──▶ GitHub Actions (кожні 15 хв +
 
 ## 2. Kindle (один раз)
 
-1. Джейлбрейк + KUAL: див. [docs/JAILBREAK.md](docs/JAILBREAK.md).
-2. У `kindle/extensions/dashboard/dash.conf` вкажіть свій URL:
+1. Джейлбрейк: див. [docs/JAILBREAK.md](docs/JAILBREAK.md).
+2. У `kindle/dashboard/dash.conf` вкажіть свій URL:
    `DASH_URL="https://USER.github.io/REPO/dash.png"`.
-3. Підключіть Kindle по USB і скопіюйте папку `kindle/extensions/dashboard` в `extensions/` на Kindle
-   (має вийти `extensions/dashboard/config.xml`).
-4. Від'єднайте USB, відкрийте KUAL → **Dashboard → Start dashboard**.
+3. Підключіть Kindle по USB і скопіюйте:
+   - папку `kindle/dashboard` у корінь Kindle (має вийти `dashboard/dash.conf`);
+   - обидва файли з `kindle/documents/` у `documents/` на Kindle.
+4. Від'єднайте USB. У бібліотеці з'являться «книги» **Dashboard** і **Dashboard: no auto-return**.
+   Відкрийте **Dashboard**.
 
 ### Як користуватися
 
 - **Почитати:** натисніть кнопку живлення. Дашборд вийде, і за кілька секунд з'явиться звичайний Kindle
   (іноді треба натиснути ще раз, щоб розблокувати).
 - **Повернути дашборд:** просто покладіть Kindle. Коли він засне, дашборд запуститься сам
-  (перші 90 секунд після виходу це не спрацьовує). Або вручну: KUAL → Start dashboard.
-- **Не хочу авто-повернення зараз:** KUAL → Disable auto-return (діє до наступного виходу з дашборда).
+  (перші 90 секунд після виходу це не спрацьовує). Або вручну: відкрийте «книгу» Dashboard.
+- **Не хочу авто-повернення зараз:** відкрийте «книгу» Dashboard: no auto-return (діє до наступного виходу з дашборда).
   Вимкнути назавжди: `AUTO_RETURN=0` у `dash.conf`.
 - Якщо щось зависло: затисніть кнопку живлення на ~15 с, і Kindle перезавантажиться у звичайний режим.
 
@@ -67,7 +70,7 @@ dashboard/*.html,css,js ──push──▶ GitHub Actions (кожні 15 хв +
 | `LOW_BATTERY` | 15 | нижче цього % у кутку з'являється `LOW BATTERY` |
 | `AUTO_RETURN` | 1 | повертати дашборд, коли Kindle засинає |
 
-Лог пишеться в `extensions/dashboard/dash.log` (його видно по USB).
+Лог пишеться в `dashboard/dash.log` (його видно по USB).
 
 ## 3. Редагування дашборда
 
