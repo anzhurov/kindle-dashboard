@@ -1,10 +1,10 @@
 # Kindle dashboard
 
-Дашборд для Kindle Paperwhite 3 (1072×1448, 300 ppi).
+Дашборд для Kindle Paperwhite 3, що стоїть горизонтально (1448×1072, 300 ppi).
 
 ```
 dashboard/*.html,css,js ──push──▶ GitHub Actions (кожні 15 хв + на push)
-                                   Chrome → PNG 1072×1448 grayscale
+                                   Chrome → 1448×1072 → поворот 90° → PNG 1072×1448 grayscale
                                           │
                                    GitHub Pages: https://USER.github.io/REPO/dash.png
                                           │
@@ -17,7 +17,7 @@ dashboard/*.html,css,js ──push──▶ GitHub Actions (кожні 15 хв +
 |---|---|
 | `dashboard/` | Сам дашборд: HTML/CSS/JS. **Тут ви редагуєте.** |
 | `dashboard/config.js` | Місто й координати для погоди |
-| `render/render.mjs` | Робить скріншот сторінки та конвертує в grayscale PNG |
+| `render/render.mjs` | Робить скріншот сторінки, повертає його й конвертує в grayscale PNG |
 | `.github/workflows/render.yml` | Рендер + публікація на GitHub Pages |
 | `kindle/extensions/dashboard/` | Розширення KUAL для Kindle |
 | `docs/JAILBREAK.md` | Підготовка Kindle |
@@ -37,6 +37,7 @@ dashboard/*.html,css,js ──push──▶ GitHub Actions (кожні 15 хв +
 
 Часовий пояс задається в **Settings → Secrets and variables → Actions → Variables** змінною `DASH_TZ`
 (за замовчуванням `Europe/Kyiv`).
+Якщо на Kindle картинка догори дриґом, задайте там же `DASH_ROTATE=270` (за замовчуванням `90`).
 
 ## 2. Kindle (один раз)
 
@@ -74,7 +75,7 @@ dashboard/*.html,css,js ──push──▶ GitHub Actions (кожні 15 хв +
 Через ~1–2 хв новий PNG з'явиться на Pages, а Kindle підхопить його на найближчому оновленні.
 
 Правила для E Ink:
-- полотно рівно **1072×1448 px**, без скролу;
+- полотно рівно **1448×1072 px** (альбомне), без скролу. Поворот для Kindle робить рендерер;
 - шрифт від ~30px, бо 16px на 300 ppi — це ~1.3 мм;
 - лише чорне, біле й кілька сірих; тонкі сірі лінії зникають;
 - дані з API підтягуйте в `dashboard.js`. Рендерер чекає на `window.dashReady = true` (до 20 с).
@@ -83,13 +84,13 @@ dashboard/*.html,css,js ──push──▶ GitHub Actions (кожні 15 хв +
 ```sh
 npm install
 npm run render      # → out/dash.png
-open out/dash.png
+open out/preview.png   # як виглядатиме; out/dash.png — повернута версія для Kindle
 ```
 Потрібен встановлений Google Chrome (у GitHub Actions він уже є).
 
 ## Обмеження
 
 - GitHub cron не точний: запуски «кожні 15 хв» можуть затримуватися або пропускатися.
-  Для годинника з точністю до хвилини цей підхід не годиться. Тому на дашборді показується «оновлено HH:MM».
+  Для годинника з точністю до хвилини цей підхід не годиться. Тому на дашборді показується «оновлено HH:MM»: це час рендера в GitHub Actions, а не час, коли Kindle завантажив картинку.
 - Якщо в репозиторії 60 днів немає комітів, GitHub вимикає scheduled-воркфлоу.
   Увімкнути знову можна однією кнопкою в Actions.

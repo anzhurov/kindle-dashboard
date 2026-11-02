@@ -21,8 +21,7 @@ function renderDate() {
   const now = new Date();
   $('weekday').textContent = now.toLocaleDateString('uk-UA', { weekday: 'long' });
   $('date').textContent = now.toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' });
-  $('updated').textContent = hhmm(now);
-  $('city').textContent = cfg.city;
+  $('updated').textContent = `${now.toLocaleDateString('uk-UA', { day: 'numeric', month: 'long' })}, ${hhmm(now)}`;
 }
 
 async function renderWeather() {
@@ -33,7 +32,7 @@ async function renderWeather() {
     hourly: 'temperature_2m,weather_code,precipitation_probability',
     daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset',
     timezone: 'auto',
-    forecast_days: 4,
+    forecast_days: 5,
     wind_speed_unit: 'ms',
   });
   const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
@@ -68,8 +67,8 @@ async function renderWeather() {
       return `
         <div class="day">
           <span class="name">${name}</span>
-          <span>${WMO[d.weather_code[i]] ?? '—'}${d.precipitation_probability_max[i] ? ` · ☂ ${d.precipitation_probability_max[i]}%` : ''}</span>
           <span class="range">${deg(d.temperature_2m_max[i])} / ${deg(d.temperature_2m_min[i])}</span>
+          <span class="desc">${WMO[d.weather_code[i]] ?? '—'}${d.precipitation_probability_max[i] ? ` · ☂ ${d.precipitation_probability_max[i]}%` : ''}</span>
         </div>`;
     })
     .join('');

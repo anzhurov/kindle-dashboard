@@ -1,8 +1,8 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {
-  width: 1072px;
-  height: 1448px;
+  width: 1448px;
+  height: 1072px;
   overflow: hidden;
   background: #fff;
   color: #000;
@@ -11,13 +11,20 @@ html, body {
 }
 
 body {
-  display: flex;
-  flex-direction: column;
-  padding: 56px 64px 36px;
-  gap: 32px;
+  display: grid;
+  grid-template-columns: 600px 1fr;
+  gap: 64px;
+  padding: 56px 64px 40px;
 }
 
 .muted { color: #444; }
+
+.left, .right {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  min-width: 0;
+}
 
 header .weekday {
   font-size: 104px;
@@ -27,26 +34,26 @@ header .weekday {
   letter-spacing: -2px;
 }
 header .date {
-  font-size: 52px;
-  font-weight: 400;
+  font-size: 50px;
   margin-top: 12px;
 }
 
 .now {
-  display: flex;
-  align-items: center;
-  gap: 48px;
   border-top: 6px solid #000;
-  padding-top: 32px;
+  padding-top: 28px;
 }
 .now .temp {
-  font-size: 220px;
+  font-size: 240px;
   font-weight: 800;
-  line-height: 0.9;
+  line-height: 0.95;
   letter-spacing: -8px;
 }
-.now-info { font-size: 40px; line-height: 1.35; }
-.now-info .cond { font-size: 52px; font-weight: 600; }
+.now .cond {
+  font-size: 56px;
+  font-weight: 600;
+  margin: 8px 0 16px;
+}
+.now-info { font-size: 38px; line-height: 1.4; }
 
 .hours {
   display: grid;
@@ -56,37 +63,30 @@ header .date {
 }
 .hour {
   text-align: center;
-  padding: 14px 0;
-  font-size: 36px;
+  padding: 18px 0;
+  font-size: 34px;
 }
 .hour + .hour { border-left: 2px solid #000; }
-.hour .t { font-size: 48px; font-weight: 800; margin: 6px 0; }
-.hour .p { font-size: 30px; color: #444; }
+.hour .t { font-size: 50px; font-weight: 800; margin: 6px 0; }
+.hour .p { font-size: 28px; color: #444; }
 
 .days { display: flex; flex-direction: column; }
 .day {
   display: grid;
-  grid-template-columns: 220px 1fr 220px;
-  align-items: baseline;
-  font-size: 42px;
-  padding: 12px 0;
+  grid-template-columns: 1fr auto;
+  row-gap: 4px;
+  padding: 18px 0;
   border-bottom: 2px solid #000;
 }
-.day .name { font-weight: 600; text-transform: capitalize; }
-.day .range { text-align: right; font-weight: 800; }
-
-.notes h2 {
-  font-size: 44px;
-  font-weight: 800;
-  margin-bottom: 16px;
-}
-.notes ul { list-style: none; font-size: 38px; line-height: 1.5; }
-.notes li::before { content: '— '; }
+.day:first-child { border-top: 2px solid #000; }
+.day .name { font-size: 40px; font-weight: 600; text-transform: capitalize; }
+.day .range { font-size: 40px; font-weight: 800; }
+.day .desc { grid-column: 1 / -1; font-size: 32px; color: #444; }
 
 footer {
   margin-top: auto;
   display: flex;
-  justify-content: space-between;
-  font-size: 30px;
+  justify-content: flex-end;
+  font-size: 28px;
   color: #444;
 }
